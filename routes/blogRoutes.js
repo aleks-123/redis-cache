@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const requireLogin = require("../middlewares/requireLogin");
+// const { clearHash } = require("../services/cache");
+const clearHash = require("../middlewares/cleanCache");
 
 const Blog = mongoose.model("Blog");
 
@@ -31,7 +33,9 @@ module.exports = (app) => {
     // }
     // //if no, we need to respond to request and update our cache to store the data
 
-    const blogs = await Blog.find({ _user: req.user.id }).cache();
+    const blogs = await Blog.find({ _user: req.user.id }).cache({
+      key: req.user.id,
+    });
 
     // console.log("SERVING FROM MONGODB");
     res.send(blogs);
@@ -39,7 +43,7 @@ module.exports = (app) => {
     // client.set(req.user.id, JSON.stringify(blogs));
   });
 
-  app.post("/api/blogs", requireLogin, async (req, res) => {
+  app.post("/api/blogs", requireLogin, clearHash, async (req, res) => {
     const { title, content } = req.body;
 
     const blog = new Blog({
